@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>HEROZINHO DA SAÚDE</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;overflow:hidden;background:#1a1a2e;font-family:'Comic Sans MS',system-ui,sans-serif;touch-action:none}
+  #game{display:block;width:100%;height:100%;image-rendering:pixelated}
+  .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+          background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;text-align:center;padding:20px;z-index:10}
+  .hidden{display:none!important}
+  h1{font-size:clamp(32px,8vw,64px);margin-bottom:20px;text-shadow:3px 3px 0 #000;letter-spacing:2px}
+  h2{font-size:clamp(24px,5vw,36px);margin-bottom:15px;text-shadow:2px 2px 0 #000}
+  p{font-size:clamp(14px,3.5vw,20px);line-height:1.6;max-width:500px;margin:8px 0}
+  .hero{font-size:clamp(60px,15vw,120px);margin:20px 0;animation:bounce 1s infinite}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+  button{padding:15px 40px;font-size:clamp(16px,4vw,24px);background:#ffd93d;color:#000;border:4px solid #000;
+         border-radius:50px;cursor:pointer;font-family:inherit;font-weight:bold;margin-top:20px;
+         box-shadow:0 6px 0 #000;transition:all .1s}
+  button:active{transform:translateY(4px);box-shadow:0 2px 0 #000}
+  .tip{background:rgba(0,0,0,.3);padding:15px 25px;border-radius:20px;margin:15px 0;max-width:500px;
+       font-size:clamp(13px,3vw,18px);border:2px dashed #fff}
+  .stats{display:flex;gap:20px;margin:20px 0;flex-wrap:wrap;justify-content:center}
+  .stat{background:rgba(0,0,0,.3);padding:10px 20px;border-radius:15px;font-size:clamp(14px,3vw,18px)}
+  .controls{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-between;
+            padding:20px;z-index:5;pointer-events:none}
+  .ctrl-btn{width:80px;height:80px;background:rgba(255,255,255,.2);border:3px solid rgba(255,255,255,.5);
+            border-radius:50%;font-size:40px;display:flex;align-items:center;justify-content:center;
+            pointer-events:auto;backdrop-filter:blur(10px)}
+  @media(min-width:800px){.controls{display:none}}
+  #hud{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;
+       color:#fff;font-size:clamp(14px,3vw,20px);font-weight:bold;text-shadow:2px 2px 0 #000;z-index:5;pointer-events:none}
+</style>
+</head>
+<body>
+
+<div id="start" class="screen">
+  <h1>🦸 HEROZINHO<br>DA SAÚDE</h1>
+  <div class="hero">🦸</div>
+  <p>Ajude o herói a pegar os hábitos saudáveis<br>e desviar dos vilões!</p>
+  <p style="font-size:clamp(12px,2.5vw,16px);opacity:.9">
+    🍎 Frutas, água e exercícios = pontos<br>
+    🍔 Doces, refrigerante e cigarro = perde vida<br>
+    ⌨️ Setas ou toque para mover
+  </p>
+  <button onclick="startGame()">JOGAR!</button>
+  <p style="font-size:12px;opacity:.6;margin-top:20px">Recorde: <span id="highScoreStart">0</span></p>
+</div>
+
+<div id="levelIntro" class="screen hidden">
+  <h2 id="levelTitle">NÍVEL 1</h2>
+  <div class="hero" id="levelEmoji">🫀</div>
+  <p id="levelDesc">O coração precisa de amor!</p>
+  <div class="tip" id="levelTip">Dica: exercícios fazem o coração forte</div>
+  <button onclick="startLevel()">VAMOS!</button>
+</div>
+
+<div id="hud" class="hidden">
+  <div>❤️ <span id="lives">3</span></div>
+  <div>⭐ <span id="score">0</span></div>
+  <div>🎯 <span id="level">1</span></div>
+</div>
+
+<div class="controls hidden" id="touchControls">
+  <div class="ctrl-btn" id="leftBtn">◀</div>
+  <div class="ctrl-btn" id="rightBtn">▶</div>
+</div>
+
+<canvas id="game"></canvas>
+
+<div id="levelEnd" class="screen hidden">
+  <h2 id="endTitle">NÍVEL COMPLETO!</h2>
+  <div class="hero" id="endEmoji">🎉</div>
+  <div class="tip" id="endTip">Você aprendeu!</div>
+  <div class="stats">
+    <div class="stat">⭐ <span id="endScore">0</span></div>
+    <div class="stat">🎯 Nível <span id="endLevel">1</span></div>
+  </div>
+  <button onclick="nextLevel()">PRÓXIMO NÍVEL</button>
+</div>
+
+<div id="gameOver" class="screen hidden">
+  <h1>💥 FIM DE JOGO</h1>
+  <div class="hero">😵</div>
+  <p>Você chegou ao nível <span id="finalLevel">1</span></p>
+  <div class="stats">
+    <div class="stat">⭐ <span id="finalScore">0</span></div>
+    <div class="stat">🏆 Recorde: <span id="finalHigh">0</span></div>
+  </div>
+  <div class="tip" id="finalTip">Continue tentando!</div>
+  <button onclick="restart()">JOGAR DE NOVO</button>
+</div>
+
+<div id="victory" class="screen hidden">
+  <h1>🏆 HERÓI DA SAÚDE!</h1>
+  <div class="hero">🦸‍♂️✨</div>
+  <p>Você completou todos os níveis!</p>
+  <div class="tip">
+    🎓 DIPLOMA DE HERÓI DA SAÚDE<br><br>
+    ✅ Comer frutas e verduras<br>
+    ✅ Beber água<br>
+    ✅ Escovar os dentes<br>
+    ✅ Dormir bem<br>
+    ✅ Se exercitar<br>
+    ✅ Lavar as mãos
+  </div>
+  <div class="stats">
+    <div class="stat">⭐ <span id="victoryScore">0</span></div>
+  </div>
+  <button onclick="restart()">JOGAR DE NOVO</button>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize(){
+  W = canvas.width = innerWidth;
+  H = canvas.height = innerHeight;
+}
+resize();
+addEventListener('resize', resize);
+
+// Níveis - cada um ensina algo
+const LEVELS = [
+  {
+    name: 'CORAÇÃO FORTE',
+    emoji: '🫀',
+    bg: '#ff6b6b',
+    desc: 'O coração precisa de amor e exercício!',
+    tip: '💡 Correr, pular e brincar fazem o coração forte!',
+    good: ['🏃','🚴','⚽','🏀','🍎','🥦'],
+    bad: ['🍔','🍟','🥤','🍩','🚬'],
+    target: 15
+  },
+  {
+    name: 'DENTES BRILHANTES',
+    emoji: '🦷',
+    bg: '#4ecdc4',
+    desc: 'Proteja os dentes das cáries!',
+    tip: '💡 Escove os dentes 3x ao dia, especialmente depois de doces!',
+    good: ['🪥','🥛','🧀','🥕','🍎','💧'],
+    bad: ['🍭','🍬','🍫','🥤','🦠'],
+    target: 18
+  },
+  {
+    name: 'BARRIGA FELIZ',
+    emoji: '🥗',
+    bg: '#95e1d3',
+    desc: 'Uma barriga feliz come colorido!',
+    tip: '💡 Quanto mais cores no prato, mais vitaminas!',
+    good: ['🍎','🍌','🥕','🥦','🍅','🥬','🍇','🍊'],
+    bad: ['🍕','🌭','🍟','🍔','🥤'],
+    target: 20
+  },
+  {
+    name: 'SONO DOS SONHOS',
+    emoji: '🌙',
+    bg: '#6c5ce7',
+    desc: 'Dormir bem faz você crescer forte!',
+    tip: '💡 Crianças precisam de 9-11 horas de sono. Desligue telas 1h antes!',
+    good: ['🛏️','🌙','⭐','📖','🥛','💤'],
+    bad: ['📱','🎮','📺','☕','🍫'],
+    target: 18
+  },
+  {
+    name: 'MÃOS LIMPAS',
+    emoji: '🧼',
+    bg: '#74b9ff',
+    desc: 'Mãos limpas espalham saúde!',
+    tip: '💡 Lave as mãos com sabão por 20 segundos antes de comer e depois do banheiro!',
+    good: ['🧼','💧','🚿','🧴','🍎','🥦'],
+    bad: ['🦠','🧫','🤧','💨','🗑️'],
+    target: 20
+  },
+  {
+    name: 'ÁGUA DA VIDA',
+    emoji: '💧',
+    bg: '#00cec9',
+    desc: 'Água é combustível do corpo!',
+    tip: '💡 Beba 6-8 copos de água por dia. Refrigerante e suco de caixinha têm muito açúcar!',
+    good: ['💧','🥛','🍉','🍊','🥒','🍓'],
+    bad: ['🥤','🧃','🍺','🍹','🥫'],
+    target: 22
+  }
+];
+
+// Estado do jogo
+let state = {
+  level: 0,
+  score: 0,
+  lives: 3,
+  caught: 0,
+  highScore: parseInt(localStorage.getItem('healthHeroHigh')||'0'),
+  running: false
+};
+
+document.getElementById('highScoreStart').textContent = state.highScore;
+
+// Jogador
+const player = {
+  x: 0, y: 0, w: 60, h: 70,
+  speed: 8, vx: 0,
+  emoji: '🦸',
+  invincible: 0
+};
+
+// Pool de objetos (não cria/destrói, reutiliza)
+const MAX_ITEMS = 20;
+const items = [];
+for(let i=0;i<MAX_ITEMS;i++){
+  items.push({active:false, x:0, y:0, vy:0, emoji:'', good:false, size:40});
+}
+
+// Partículas
+const particles = [];
+const MAX_PARTICLES = 30;
+
+// Input
+const keys = {left:false, right:false};
+addEventListener('keydown', e => {
+  if(e.key==='ArrowLeft'||e.key==='a') keys.left=true;
+  if(e.key==='ArrowRight'||e.key==='d') keys.right=true;
+});
+addEventListener('keyup', e => {
+  if(e.key==='ArrowLeft'||e.key==='a') keys.left=false;
+  if(e.key==='ArrowRight'||e.key==='d') keys.right=false;
+});
+
+// Touch
+let touchX = null;
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+leftBtn.addEventListener('touchstart', e=>{e.preventDefault();keys.left=true});
+leftBtn.addEventListener('touchend', e=>{e.preventDefault();keys.left=false});
+rightBtn.addEventListener('touchstart', e=>{e.preventDefault();keys.right=true});
+rightBtn.addEventListener('touchend', e=>{e.preventDefault();keys.right=false});
+
+// Áudio
+let audioCtx;
+function initAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+function beep(freq, dur=0.1, type='sine', vol=0.1){
+  if(!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = type;
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(vol, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime+dur);
+}
+function soundGood(){beep(660,0.1);setTimeout(()=>beep(880,0.15),80)}
+function soundBad(){beep(200,0.2,'sawtooth',0.15)}
+function soundLevel(){beep(523,0.15);setTimeout(()=>beep(659,0.15),120);setTimeout(()=>beep(784,0.25),240)}
+
+// Partículas
+function spawnParticles(x,y,color,count=8){
+  for(let i=0;i<count;i++){
+    if(particles.length>=MAX_PARTICLES) particles.shift();
+    particles.push({
+      x, y,
+      vx:(Math.random()-0.5)*6,
+      vy:(Math.random()-0.5)*6-2,
+      life:30,
+      color
+    });
+  }
+}
+
+// Spawn item
+function spawnItem(){
+  const level = LEVELS[state.level];
+  const good = Math.random() < 0.65; // 65% bons
+  const list = good ? level.good : level.bad;
+  const emoji = list[Math.floor(Math.random()*list.length)];
+  
+  for(const item of items){
+    if(!item.active){
+      item.active = true;
+      item.x = 40 + Math.random()*(W-80);
+      item.y = -40;
+      item.vy = 2 + Math.random()*2 + state.level*0.3;
+      item.emoji = emoji;
+      item.good = good;
+      item.size = 40;
+      return;
+    }
+  }
+}
+
+// Iniciar jogo
+function startGame(){
+  initAudio();
+  state.level = 0;
+  state.score = 0;
+  state.lives = 3;
+  showLevelIntro();
+}
+
+function showLevelIntro(){
+  const level = LEVELS[state.level];
+  document.getElementById('levelTitle').textContent = `NÍVEL ${state.level+1}: ${level.name}`;
+  document.getElementById('levelEmoji').textContent = level.emoji;
+  document.getElementById('levelDesc').textContent = level.desc;
+  document.getElementById('levelTip').textContent = level.tip;
+  hideAll();
+  document.getElementById('levelIntro').classList.remove('hidden');
+}
+
+function startLevel(){
+  const level = LEVELS[state.level];
+  state.caught = 0;
+  player.x = W/2 - player.w/2;
+  player.y = H - 120;
+  player.invincible = 0;
+  for(const item of items) item.active = false;
+  particles.length = 0;
+  
+  hideAll();
+  document.getElementById('hud').classList.remove('hidden');
+  if('ontouchstart' in window) document.getElementById('touchControls').classList.remove('hidden');
+  
+  updateHUD();
+  state.running = true;
+  lastSpawn = 0;
+  requestAnimationFrame(loop);
+}
+
+function nextLevel(){
+  state.level++;
+  if(state.level >= LEVELS.length){
+    showVictory();
+  } else {
+    showLevelIntro();
+  }
+}
+
+function showLevelEnd(){
+  state.running = false;
+  soundLevel();
+  const level = LEVELS[state.level];
+  document.getElementById('endTitle').textContent = `${level.name} COMPLETO!`;
+  document.getElementById('endEmoji').textContent = level.emoji;
+  document.getElementById('endTip').textContent = level.tip;
+  document.getElementById('endScore').textContent = state.score;
+  document.getElementById('endLevel').textContent = state.level+1;
+  hideAll();
+  document.getElementById('levelEnd').classList.remove('hidden');
+}
+
+function showGameOver(){
+  state.running = false;
+  if(state.score > state.highScore){
+    state.highScore = state.score;
+    localStorage.setItem('healthHeroHigh', state.score);
+  }
+  document.getElementById('finalLevel').textContent = state.level+1;
+  document.getElementById('finalScore').textContent = state.score;
+  document.getElementById('finalHigh').textContent = state.highScore;
+  document.getElementById('finalTip').textContent = LEVELS[state.level].tip;
+  hideAll();
+  document.getElementById('gameOver').classList.remove('hidden');
+}
+
+function showVictory(){
+  state.running = false;
+  if(state.score > state.highScore){
+    state.highScore = state.score;
+    localStorage.setItem('healthHeroHigh', state.score);
+  }
+  document.getElementById('victoryScore').textContent = state.score;
+  hideAll();
+  document.getElementById('victory').classList.remove('hidden');
+}
+
+function restart(){
+  hideAll();
+  document.getElementById('start').classList.remove('hidden');
+  document.getElementById('highScoreStart').textContent = state.highScore;
+}
+
+function hideAll(){
+  ['start','levelIntro','hud','touchControls','levelEnd','gameOver','victory'].forEach(id=>{
+    document.getElementById(id).classList.add('hidden');
+  });
+}
+
+function updateHUD(){
+  document.getElementById('lives').textContent = '❤️'.repeat(state.lives) || '💀';
+  document.getElementById('score').textContent = state.score;
+  document.getElementById('level').textContent = `${state.level+1}/${LEVELS.length}`;
+}
+
+// Loop principal
+let lastSpawn = 0;
+let lastTime = 0;
+function loop(ts){
+  if(!state.running) return;
+  const dt = Math.min(32, ts - lastTime);
+  lastTime = ts;
+  
+  // Spawn
+  lastSpawn += dt;
+  const spawnRate = Math.max(400, 900 - state.level*80);
+  if(lastSpawn > spawnRate){
+    spawnItem();
+    lastSpawn = 0;
+  }
+  
+  // Mover jogador
+  if(keys.left) player.vx = -player.speed;
+  else if(keys.right) player.vx = player.speed;
+  else player.vx *= 0.8;
+  
+  player.x += player.vx;
+  player.x = Math.max(0, Math.min(W-player.w, player.x));
+  
+  if(player.invincible > 0) player.invincible--;
+  
+  // Atualizar itens
+  for(const item of items){
+    if(!item.active) continue;
+    item.y += item.vy;
+    
+    // Colisão
+    if(item.y + item.size > player.y && 
+       item.y < player.y + player.h &&
+       item.x + item.size > player.x &&
+       item.x < player.x + player.w){
+      
+      if(item.good){
+        state.score += 10;
+        state.caught++;
+        soundGood();
+        spawnParticles(item.x+item.size/2, item.y+item.size/2, '#4ade80');
+        
+        if(state.caught >= LEVELS[state.level].target){
+          showLevelEnd();
+          return;
+        }
+      } else if(player.invincible === 0){
+        state.lives--;
+        player.invincible = 90;
+        soundBad();
+        spawnParticles(item.x+item.size/2, item.y+item.size/2, '#ef4444');
+        
+        if(state.lives <= 0){
+          showGameOver();
+          return;
+        }
+      }
+      item.active = false;
+      updateHUD();
+      continue;
+    }
+    
+    // Fora da tela
+    if(item.y > H + 50){
+      item.active = false;
+    }
+  }
+  
+  // Partículas
+  for(let i=particles.length-1;i>=0;i--){
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.3;
+    p.life--;
+    if(p.life<=0) particles.splice(i,1);
+  }
+  
+  draw();
+  requestAnimationFrame(loop);
+}
+
+// Desenho
+function draw(){
+  const level = LEVELS[state.level];
+  
+  // Fundo gradiente
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0, level.bg);
+  grad.addColorStop(1, shade(level.bg, -30));
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+  
+  // Nuvens decorativas
+  ctx.fillStyle = 'rgba(255,255,255,0.2)';
+  for(let i=0;i<3;i++){
+    const cx = (W/3)*i + ((Date.now()/50 + i*200)%W);
+    const cy = 80 + i*40;
+    ctx.beginPath();
+    ctx.arc(cx%W, cy, 30, 0, Math.PI*2);
+    ctx.arc((cx%W)+25, cy, 35, 0, Math.PI*2);
+    ctx.arc((cx%W)+50, cy, 30, 0, Math.PI*2);
+    ctx.fill();
+  }
+  
+  // Barra de progresso do nível
+  const levelData = LEVELS[state.level];
+  const progress = state.caught / levelData.target;
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillRect(20, 50, W-40, 12);
+  ctx.fillStyle = '#ffd93d';
+  ctx.fillRect(20, 50, (W-40)*progress, 12);
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(20, 50, W-40, 12);
+  
+  // Itens
+  ctx.font = '40px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for(const item of items){
+    if(!item.active) continue;
+    ctx.fillText(item.emoji, item.x+item.size/2, item.y+item.size/2);
+  }
+  
+  // Partículas
+  for(const p of particles){
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life/30;
+    ctx.fillRect(p.x-3, p.y-3, 6, 6);
+  }
+  ctx.globalAlpha = 1;
+  
+  // Jogador
+  if(player.invincible === 0 || Math.floor(player.invincible/5)%2===0){
+    ctx.font = '60px serif';
+    ctx.fillText(player.emoji, player.x+player.w/2, player.y+player.h/2);
+  }
+  
+  // Chão
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.fillRect(0, H-40, W, 40);
+}
+
+function shade(hex, percent){
+  const num = parseInt(hex.slice(1),16);
+  const r = Math.max(0,Math.min(255,(num>>16)+percent));
+  const g = Math.max(0,Math.min(255,((num>>8)&0xff)+percent));
+  const b = Math.max(0,Math.min(255,(num&0xff)+percent));
+  return `rgb(${r},${g},${b})`;
+}
+
+// Inicialização
+player.x = W/2 - player.w/2;
+player.y = H - 120;
+</script>
+</body>
+  </html>
