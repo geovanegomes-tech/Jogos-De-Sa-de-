@@ -1,0 +1,841 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refúgio Interno - Espaço de Relaxamento e Foco</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        lavender: {
+                            50: '#fcfaff',
+                            100: '#f3e8ff',
+                            200: '#e9d5ff',
+                            300: '#d8b4fe',
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            900: '#3b0764',
+                        },
+                        mint: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            800: '#166534',
+                        },
+                        peach: {
+                            50: '#fff7ed',
+                            100: '#ffedd5',
+                            200: '#fed7aa',
+                            300: '#fdba74',
+                            400: '#fb923c',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Fontes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* Animação do círculo de respiração */
+        @keyframes expand-contract {
+            0% { transform: scale(0.85); opacity: 0.7; }
+            50% { transform: scale(1.35); opacity: 0.95; }
+            100% { transform: scale(0.85); opacity: 0.7; }
+        }
+
+        .breathing-circle-anim {
+            transition: transform 0.1s linear;
+        }
+
+        /* Partículas e brilhos */
+        .sparkle {
+            position: absolute;
+            pointer-events: none;
+            animation: float-up 1.2s ease-out forwards;
+            border-radius: 50%;
+        }
+
+        @keyframes float-up {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-40px) scale(0.3); }
+        }
+
+        /* Bolhas flutuantes de estresse */
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: transform 0.2s ease;
+        }
+
+        .bubble:hover {
+            transform: scale(1.08);
+        }
+
+        /* Transições suaves de tabs */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Cartão com Efeito de Onda/Glow */
+        .card-glow {
+            box-shadow: 0 10px 30px -5px rgba(168, 85, 247, 0.15);
+        }
+        .dark .card-glow {
+            box-shadow: 0 10px 30px -5px rgba(168, 85, 247, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-lavender-50 via-peach-50 to-mint-50 dark:from-slate-900 dark:via-purple-950 dark:to-slate-900 text-slate-700 dark:text-slate-200 min-h-full flex flex-col justify-between">
+
+    <!-- Cabeçalho -->
+    <header class="w-full max-w-5xl mx-auto p-4 sm:p-6 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-lavender-300 dark:bg-lavender-600 flex items-center justify-center text-lavender-800 dark:text-lavender-100 shadow-md">
+                <i class="fa-solid font-bold fa-leaf text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-semibold tracking-tight text-slate-800 dark:text-slate-100">Refúgio Interno</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Um espaço para desacelerar e respirar</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <!-- Botão de Som da Natureza / Sintetizador -->
+            <button id="soundToggleBtn" onclick="toggleAmbientSound()" class="p-2.5 rounded-full bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition shadow-sm" title="Alternar som ambiente">
+                <i id="soundIcon" class="fa-solid fa-volume-xmark"></i>
+            </button>
+            
+            <!-- Botão Dark Mode -->
+            <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2.5 rounded-full bg-white/70 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition shadow-sm" title="Alternar modo escuro">
+                <i id="themeIcon" class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="w-full max-w-4xl mx-auto px-4 py-2 flex-grow flex flex-col">
+        
+        <!-- Navegação por Abas -->
+        <nav class="flex justify-center p-1.5 mb-6 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-2xl border border-slate-200/60 dark:border-slate-700/60 shadow-sm max-w-md mx-auto w-full">
+            <button onclick="switchTab('breathing')" id="tab-breathing" class="nav-tab flex-1 py-2.5 px-3 rounded-xl text-sm font-medium transition flex items-center justify-center space-x-2 bg-white dark:bg-slate-700 text-lavender-600 dark:text-lavender-300 shadow-sm">
+                <i class="fa-solid fa-wind"></i>
+                <span>Respiração</span>
+            </button>
+            <button onclick="switchTab('affirmations')" id="tab-affirmations" class="nav-tab flex-1 py-2.5 px-3 rounded-xl text-sm font-medium transition flex items-center justify-center space-x-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                <i class="fa-solid fa-heart"></i>
+                <span>Afirmações</span>
+            </button>
+            <button onclick="switchTab('garden')" id="tab-garden" class="nav-tab flex-1 py-2.5 px-3 rounded-xl text-sm font-medium transition flex items-center justify-center space-x-2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                <i class="fa-solid fa-seedling"></i>
+                <span>Jardim & Bolhas</span>
+            </button>
+        </nav>
+
+        <!-- ABA 1: Exercício de Respiração -->
+        <section id="content-breathing" class="tab-content active flex-grow flex flex-col justify-center items-center">
+            <div class="w-full max-w-lg bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/40 dark:border-slate-700/40 card-glow text-center flex flex-col items-center">
+                
+                <!-- Seleção do Método -->
+                <div class="mb-6 flex justify-center space-x-2 bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl text-xs font-medium">
+                    <button onclick="setBreathingPattern('box')" id="btn-pattern-box" class="pattern-btn px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 shadow-sm">
+                        Respiração Quadrada (4-4-4-4)
+                    </button>
+                    <button onclick="setBreathingPattern('478')" id="btn-pattern-478" class="pattern-btn px-3 py-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
+                        Relaxamento 4-7-8
+                    </button>
+                </div>
+
+                <!-- Visualizador de Respiração -->
+                <div class="relative w-64 h-64 sm:w-72 sm:h-72 my-4 flex items-center justify-center">
+                    <!-- Anéis externos decorativos -->
+                    <div class="absolute inset-0 rounded-full border border-lavender-200/50 dark:border-lavender-900/40"></div>
+                    <div class="absolute inset-4 rounded-full border border-peach-200/50 dark:border-peach-900/40"></div>
+                    
+                    <!-- Círculo animado principal -->
+                    <div id="breathingCircle" class="w-44 h-44 sm:w-48 sm:h-48 rounded-full bg-gradient-to-br from-lavender-300 via-peach-200 to-mint-200 dark:from-lavender-700 dark:via-purple-900 dark:to-teal-900 opacity-80 flex flex-col items-center justify-center shadow-xl transition-all duration-300 transform scale-90">
+                        <span id="breathInstruction" class="text-lg sm:text-xl font-semibold text-slate-800 dark:text-slate-100 tracking-wide">Pronto?</span>
+                        <span id="breathTimer" class="text-2xl sm:text-3xl font-light text-slate-700 dark:text-slate-200 mt-1">4</span>
+                    </div>
+                </div>
+
+                <!-- Descrição da fase -->
+                <p id="breathSubtext" class="text-sm text-slate-500 dark:text-slate-400 h-6 mb-6">
+                    Clique em iniciar para acalmar a sua mente.
+                </p>
+
+                <!-- Controles -->
+                <div class="flex items-center space-x-4">
+                    <button id="startBreathBtn" onclick="toggleBreathingSession()" class="px-8 py-3 bg-gradient-to-r from-lavender-400 to-peach-300 hover:from-lavender-500 hover:to-peach-400 dark:from-lavender-600 dark:to-purple-600 text-slate-800 dark:text-white rounded-2xl font-medium shadow-md hover:shadow-lg transition transform active:scale-95 flex items-center space-x-2">
+                        <i id="startBreathIcon" class="fa-solid fa-play"></i>
+                        <span id="startBreathText">Iniciar</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 2: Gerador de Afirmações Positivas -->
+        <section id="content-affirmations" class="tab-content flex-grow flex flex-col justify-center items-center">
+            <div class="w-full max-w-lg">
+                <!-- Cartão de Afirmação -->
+                <div id="affirmationCard" class="bg-white/70 dark:bg-slate-800/70 backdrop-blur-lg rounded-3xl p-8 border border-white/40 dark:border-slate-700/40 card-glow text-center flex flex-col items-center justify-between min-h-[320px] transition-all duration-500">
+                    <div class="w-12 h-12 rounded-full bg-peach-100 dark:bg-slate-700 text-peach-400 dark:text-peach-300 flex items-center justify-center text-xl mb-4">
+                        <i class="fa-solid fa-quote-left"></i>
+                    </div>
+
+                    <p id="affirmationText" class="text-xl sm:text-2xl font-light leading-relaxed text-slate-800 dark:text-slate-100 my-auto px-2">
+                        "Eu permito que a minha mente descanse e aceito o momento presente com serenidade."
+                    </p>
+
+                    <div class="mt-6 flex flex-col items-center space-y-4 w-full">
+                        <span id="affirmationCategory" class="text-xs uppercase tracking-widest font-semibold px-3 py-1 rounded-full bg-lavender-100 dark:bg-lavender-900/40 text-lavender-600 dark:text-lavender-300">
+                            Paz Interior
+                        </span>
+
+                        <div class="flex items-center space-x-3 pt-2">
+                            <button onclick="generateAffirmation()" class="px-6 py-2.5 bg-slate-800 dark:bg-slate-100 text-white dark:text-slate-900 rounded-xl font-medium text-sm shadow hover:bg-slate-700 dark:hover:bg-white transition flex items-center space-x-2">
+                                <i class="fa-solid fa-rotate"></i>
+                                <span>Nova Afirmação</span>
+                            </button>
+                            <button onclick="copyAffirmation()" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition" title="Copiar texto">
+                                <i class="fa-solid fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABA 3: Jardim da Gratidão & Bolhas de Estresse -->
+        <section id="content-garden" class="tab-content flex-grow flex flex-col">
+            <!-- Sub-menu do jogo -->
+            <div class="flex justify-center mb-4 space-x-3">
+                <button onclick="switchSubGame('bubbles')" id="sub-btn-bubbles" class="px-4 py-1.5 rounded-xl text-xs font-medium transition bg-lavender-200 dark:bg-lavender-900 text-lavender-800 dark:text-lavender-200">
+                    <i class="fa-solid fa-soap mr-1"></i> Bolhas de Preocupações
+                </button>
+                <button onclick="switchSubGame('plants')" id="sub-btn-plants" class="px-4 py-1.5 rounded-xl text-xs font-medium transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    <i class="fa-solid fa-seedling mr-1"></i> Jardim da Gratidão
+                </button>
+            </div>
+
+            <!-- Jogo 1: Bolhas de Estresse -->
+            <div id="subgame-bubbles" class="flex-grow flex flex-col items-center">
+                <div class="w-full text-center mb-2">
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Toque nas bolhas com pensamentos difíceis para estourá-las e soltar a tensão.
+                    </p>
+                </div>
+                <!-- Container da Área de Bolhas -->
+                <div id="bubbleContainer" class="relative w-full flex-grow min-h-[360px] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-3xl border border-white/50 dark:border-slate-700/50 overflow-hidden shadow-inner">
+                    <!-- Bolhas geradas via JavaScript -->
+                </div>
+                <!-- Criar Nova Bolha Personalizada -->
+                <div class="w-full max-w-md mt-3 flex items-center space-x-2">
+                    <input type="text" id="customBubbleText" placeholder="Digite uma preocupação para estourar..." class="flex-grow px-4 py-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-lavender-400">
+                    <button onclick="createCustomBubble()" class="px-4 py-2.5 bg-lavender-400 dark:bg-lavender-600 text-white rounded-xl text-sm font-medium hover:bg-lavender-500 transition flex items-center justify-center">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Jogo 2: Jardim da Gratidão -->
+            <div id="subgame-plants" class="hidden flex-grow flex flex-col items-center">
+                <div class="w-full text-center mb-2">
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        Plante sementes expressando aquilo pelo qual você é grato hoje.
+                    </p>
+                </div>
+
+                <!-- Formulário de Gratidão -->
+                <div class="w-full max-w-md flex items-center space-x-2 mb-4">
+                    <input type="text" id="gratitudeInput" placeholder="Pelo que você é grato hoje?..." class="flex-grow px-4 py-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-mint-400">
+                    <button onclick="plantSeed()" class="px-4 py-2.5 bg-mint-400 dark:bg-mint-600 text-slate-800 dark:text-white rounded-xl text-sm font-medium hover:bg-mint-500 transition flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-seedling"></i>
+                        <span>Plantador</span>
+                    </button>
+                </div>
+
+                <!-- Canteiro de Flores/Plantas -->
+                <div id="gardenPlot" class="w-full flex-grow min-h-[300px] bg-gradient-to-b from-mint-50/50 to-emerald-100/30 dark:from-slate-900/50 dark:to-emerald-950/30 rounded-3xl border border-mint-200/50 dark:border-emerald-800/40 p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 auto-rows-max overflow-y-auto max-h-[380px]">
+                    <!-- Plantas salvas serão renderizadas aqui -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="w-full max-w-5xl mx-auto p-4 text-center text-xs text-slate-400 dark:text-slate-500">
+        <p>Lembre-se: Dar um tempo para si mesmo é uma necessidade, não um luxo. 🌿</p>
+    </footer>
+
+    <!-- Caixa de Mensagem / Toast Notification Customizada -->
+    <div id="toast" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800 dark:bg-white text-white dark:text-slate-800 px-5 py-2.5 rounded-2xl shadow-xl text-sm opacity-0 transition-opacity duration-300 pointer-events-none flex items-center space-x-2">
+        <i class="fa-solid fa-circle-check text-mint-400 dark:text-mint-600"></i>
+        <span id="toastMessage">Mensagem</span>
+    </div>
+
+    <!-- Script Principal -->
+    <script>
+        /* ==========================================
+           1. ESTADO GLOBAL E CONFIGURAÇÃO
+           ========================================== */
+        let currentTab = 'breathing';
+        let audioCtx = null;
+        let ambientOscillator = null;
+        let ambientGain = null;
+        let isSoundPlaying = false;
+
+        // Afirmações Positivas
+        const affirmationsList = [
+            { text: "Eu permito que a minha mente descanse e aceito o momento presente com serenidade.", category: "Paz Interior" },
+            { text: "Está tudo bem não ter o controle de tudo. Respiro fundo e sigo no meu próprio tempo.", category: "Autocompaixão" },
+            { text: "Eu sou capaz de lidar com os desafios de hoje, um pequeno passo de cada vez.", category: "Força" },
+            { text: "Eu me liberto da necessidade de perfeição e acolho quem eu sou agora.", category: "Aceitação" },
+            { text: "Minha paz mental é uma prioridade. Escolho focar no que me traz leveza.", category: "Bem-estar" },
+            { text: "Cada respiração me renova e traz clareza para a minha mente.", category: "Mindfulness" },
+            { text: "Eu honro os meus sentimentos e me dou permissão para descansar quando preciso.", category: "Autocuidado" },
+            { text: "Pensamentos são apenas nuvens passando no céu da minha mente. Eu sou o céu.", category: "Clareza" }
+        ];
+
+        // Palavras padrão para bolhas de estresse
+        const defaultStressBubbles = [
+            "Ansiedade pelo amanhã", "Cansaço", "Perfeccionismo", 
+            "Excesso de pensamentos", "Pressão do tempo", "Dúvidas",
+            "Insegurança", "Autocobrança"
+        ];
+
+        /* ==========================================
+           2. WEB AUDIO API - EFEITOS SONOROS E AMBIENTE
+           ========================================== */
+        function initAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Tocar tom relaxante suave (para clique / estouro)
+        function playGentleTone(freq = 440, type = 'sine', duration = 0.5) {
+            try {
+                initAudioContext();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+                // Envoltório suave para evitar estalos
+                gain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.15, audioCtx.currentTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio not allowed yet", e);
+            }
+        }
+
+        // Tocar tom de estouro de bolha (glissando descendente e suave)
+        function playPopSound() {
+            try {
+                initAudioContext();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+
+                const now = audioCtx.currentTime;
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } catch (e) {}
+        }
+
+        // Som de Drone/Ambiente Relaxante Simulado
+        function toggleAmbientSound() {
+            initAudioContext();
+            const soundIcon = document.getElementById('soundIcon');
+            const soundBtn = document.getElementById('soundToggleBtn');
+
+            if (!isSoundPlaying) {
+                // Iniciar drone harmonioso
+                ambientOscillator = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                ambientGain = audioCtx.createGain();
+
+                ambientOscillator.type = 'sine';
+                ambientOscillator.frequency.setValueAtTime(146.83, audioCtx.currentTime); // D3
+
+                osc2.type = 'triangle';
+                osc2.frequency.setValueAtTime(220.00, audioCtx.currentTime); // A3
+
+                ambientGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+                ambientGain.gain.exponentialRampToValueAtTime(0.05, audioCtx.currentTime + 2);
+
+                ambientOscillator.connect(ambientGain);
+                osc2.connect(ambientGain);
+                ambientGain.connect(audioCtx.destination);
+
+                ambientOscillator.start();
+                osc2.start();
+
+                isSoundPlaying = true;
+                soundIcon.className = "fa-solid fa-volume-high text-lavender-500";
+                soundBtn.classList.add("bg-lavender-100", "dark:bg-lavender-900/50");
+                showToast("Som ambiente ativado");
+            } else {
+                // Parar som
+                if (ambientGain) {
+                    ambientGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
+                    setTimeout(() => {
+                        if (ambientOscillator) ambientOscillator.stop();
+                    }, 1000);
+                }
+                isSoundPlaying = false;
+                soundIcon.className = "fa-solid fa-volume-xmark";
+                soundBtn.classList.remove("bg-lavender-100", "dark:bg-lavender-900/50");
+                showToast("Som ambiente pausado");
+            }
+        }
+
+        /* ==========================================
+           3. NAVEGAÇÃO E TEMAS
+           ========================================== */
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => {
+                el.classList.remove('bg-white', 'dark:bg-slate-700', 'text-lavender-600', 'dark:text-lavender-300', 'shadow-sm');
+                el.classList.add('text-slate-500', 'dark:text-slate-400');
+            });
+
+            document.getElementById(`content-${tabId}`).classList.add('active');
+            const activeNav = document.getElementById(`tab-${tabId}`);
+            activeNav.classList.add('bg-white', 'dark:bg-slate-700', 'text-lavender-600', 'dark:text-lavender-300', 'shadow-sm');
+            activeNav.classList.remove('text-slate-500', 'dark:text-slate-400');
+
+            playGentleTone(523.25, 'sine', 0.2); // Som sutil de aba
+
+            if (tabId === 'garden' && document.getElementById('bubbleContainer').children.length === 0) {
+                initBubbles();
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                themeIcon.className = "fa-solid fa-moon";
+            } else {
+                html.classList.add('dark');
+                themeIcon.className = "fa-solid fa-sun text-amber-400";
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 2500);
+        }
+
+        /* ==========================================
+           4. EXERCÍCIO DE RESSPIRAÇÃO
+           ========================================== */
+        let breathingInterval = null;
+        let isBreathingActive = false;
+        let currentPattern = 'box'; // 'box' ou '478'
+
+        // Configuração dos Padrões (segundos)
+        const patterns = {
+            'box': [
+                { instruction: 'Inspire', duration: 4, scale: 1.35 },
+                { instruction: 'Segure', duration: 4, scale: 1.35 },
+                { instruction: 'Expire', duration: 4, scale: 0.85 },
+                { instruction: 'Segure', duration: 4, scale: 0.85 }
+            ],
+            '478': [
+                { instruction: 'Inspire', duration: 4, scale: 1.35 },
+                { instruction: 'Segure', duration: 7, scale: 1.35 },
+                { instruction: 'Expire', duration: 8, scale: 0.85 }
+            ]
+        };
+
+        function setBreathingPattern(pattern) {
+            if (isBreathingActive) stopBreathingSession();
+            currentPattern = pattern;
+
+            document.querySelectorAll('.pattern-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'dark:bg-slate-700', 'text-slate-800', 'dark:text-slate-100', 'shadow-sm');
+                btn.classList.add('text-slate-500', 'dark:text-slate-400');
+            });
+
+            const activeBtn = document.getElementById(`btn-pattern-${pattern}`);
+            activeBtn.classList.add('bg-white', 'dark:bg-slate-700', 'text-slate-800', 'dark:text-slate-100', 'shadow-sm');
+            activeBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
+        }
+
+        function toggleBreathingSession() {
+            if (isBreathingActive) {
+                stopBreathingSession();
+            } else {
+                startBreathingSession();
+            }
+        }
+
+        function startBreathingSession() {
+            isBreathingActive = true;
+            document.getElementById('startBreathText').textContent = 'Pausar';
+            document.getElementById('startBreathIcon').className = 'fa-solid fa-pause';
+            document.getElementById('breathSubtext').textContent = 'Siga o ritmo do círculo e relaxe os ombros.';
+
+            let stepIndex = 0;
+            const sequence = patterns[currentPattern];
+
+            function runStep() {
+                if (!isBreathingActive) return;
+
+                const currentStep = sequence[stepIndex];
+                const circle = document.getElementById('breathingCircle');
+                const instruction = document.getElementById('breathInstruction');
+                const timerDisplay = document.getElementById('breathTimer');
+
+                instruction.textContent = currentStep.instruction;
+                circle.style.transition = `transform ${currentStep.duration}s ease-in-out`;
+                circle.style.transform = `scale(${currentStep.scale})`;
+
+                // Tocar som de orientação leve na transição
+                if (currentStep.instruction === 'Inspire') playGentleTone(329.63, 'sine', 1);
+                if (currentStep.instruction === 'Expire') playGentleTone(261.63, 'sine', 1);
+
+                let countdown = currentStep.duration;
+                timerDisplay.textContent = countdown;
+
+                clearInterval(breathingInterval);
+                breathingInterval = setInterval(() => {
+                    countdown--;
+                    if (countdown >= 0) {
+                        timerDisplay.textContent = countdown;
+                    }
+
+                    if (countdown <= 0) {
+                        clearInterval(breathingInterval);
+                        stepIndex = (stepIndex + 1) % sequence.length;
+                        runStep();
+                    }
+                }, 1000);
+            }
+
+            runStep();
+        }
+
+        function stopBreathingSession() {
+            isBreathingActive = false;
+            clearInterval(breathingInterval);
+
+            const circle = document.getElementById('breathingCircle');
+            circle.style.transition = 'transform 0.5s ease';
+            circle.style.transform = 'scale(0.9)';
+
+            document.getElementById('breathInstruction').textContent = 'Pausado';
+            document.getElementById('breathTimer').textContent = '-';
+            document.getElementById('startBreathText').textContent = 'Continuar';
+            document.getElementById('startBreathIcon').className = 'fa-solid fa-play';
+            document.getElementById('breathSubtext').textContent = 'Clique para retomar quando desejar.';
+        }
+
+        /* ==========================================
+           5. GERADOR DE AFIRMAÇÕES
+           ========================================== */
+        function generateAffirmation() {
+            const card = document.getElementById('affirmationCard');
+            const textEl = document.getElementById('affirmationText');
+            const catEl = document.getElementById('affirmationCategory');
+
+            // Efeito de esmaecimento suave
+            card.style.opacity = '0.3';
+            card.style.transform = 'translateY(8px)';
+
+            playGentleTone(659.25, 'sine', 0.3); // Som harmônico leve
+
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * affirmationsList.length);
+                const item = affirmationsList[randomIndex];
+
+                textEl.textContent = `"${item.text}"`;
+                catEl.textContent = item.category;
+
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 250);
+        }
+
+        function copyAffirmation() {
+            const text = document.getElementById('affirmationText').textContent;
+            
+            // Compatibilidade de cópia para iFrames restritos
+            const tempInput = document.createElement('textarea');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showToast("Afirmação copiada com sucesso!");
+            playGentleTone(880, 'sine', 0.15);
+        }
+
+        /* ==========================================
+           6. JOGO DAS BOLHAS DE ESTRESSE & JARDIM
+           ========================================== */
+        function switchSubGame(game) {
+            const bubblesGame = document.getElementById('subgame-bubbles');
+            const plantsGame = document.getElementById('subgame-plants');
+            const btnBubbles = document.getElementById('sub-btn-bubbles');
+            const btnPlants = document.getElementById('sub-btn-plants');
+
+            if (game === 'bubbles') {
+                bubblesGame.classList.remove('hidden');
+                plantsGame.classList.add('hidden');
+                btnBubbles.className = "px-4 py-1.5 rounded-xl text-xs font-medium transition bg-lavender-200 dark:bg-lavender-900 text-lavender-800 dark:text-lavender-200";
+                btnPlants.className = "px-4 py-1.5 rounded-xl text-xs font-medium transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
+            } else {
+                plantsGame.classList.remove('hidden');
+                bubblesGame.classList.add('hidden');
+                btnPlants.className = "px-4 py-1.5 rounded-xl text-xs font-medium transition bg-mint-200 dark:bg-mint-900 text-mint-800 dark:text-mint-200";
+                btnBubbles.className = "px-4 py-1.5 rounded-xl text-xs font-medium transition bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400";
+            }
+        }
+
+        // Inicializar Bolhas
+        function initBubbles() {
+            const container = document.getElementById('bubbleContainer');
+            container.innerHTML = '';
+            defaultStressBubbles.forEach((text) => spawnBubble(text));
+        }
+
+        function spawnBubble(text) {
+            const container = document.getElementById('bubbleContainer');
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble bg-white/70 dark:bg-slate-700/60 border border-white/60 dark:border-slate-600/60 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-medium';
+            
+            // Tamanhos e posições aleatórias
+            const size = Math.floor(Math.random() * 30) + 85; // 85px - 115px
+            bubble.style.width = `${size}px`;
+            bubble.style.height = `${size}px`;
+
+            const maxX = container.clientWidth - size - 20;
+            const maxY = container.clientHeight - size - 20;
+            const posX = Math.max(10, Math.floor(Math.random() * maxX));
+            const posY = Math.max(10, Math.floor(Math.random() * maxY));
+
+            bubble.style.left = `${posX}px`;
+            bubble.style.top = `${posY}px`;
+            bubble.innerText = text;
+
+            // Animação de flutuação suave aleatória
+            let floatDirection = 1;
+            const floatInterval = setInterval(() => {
+                if (!bubble.parentElement) {
+                    clearInterval(floatInterval);
+                    return;
+                }
+                const currentTop = parseFloat(bubble.style.top) || posY;
+                if (currentTop <= 10) floatDirection = 1;
+                if (currentTop >= maxY) floatDirection = -1;
+                bubble.style.top = `${currentTop + (floatDirection * 0.4)}px`;
+            }, 50);
+
+            // Evento de estourar bolha
+            bubble.addEventListener('click', (e) => {
+                popBubble(bubble, e.clientX, e.clientY);
+            });
+
+            container.appendChild(bubble);
+        }
+
+        function createCustomBubble() {
+            const input = document.getElementById('customBubbleText');
+            const text = input.value.trim();
+
+            if (text) {
+                spawnBubble(text);
+                input.value = '';
+                showToast("Preocupação adicionada. Toque nela para estourar!");
+            }
+        }
+
+        function popBubble(element, clickX, clickY) {
+            playPopSound();
+            createSparkles(clickX, clickY);
+
+            element.style.transform = 'scale(1.3)';
+            element.style.opacity = '0';
+            element.style.transition = 'all 0.2s ease-out';
+
+            setTimeout(() => {
+                element.remove();
+                // Se não houver bolhas, recarrega sugestões
+                const container = document.getElementById('bubbleContainer');
+                if (container.children.length === 0) {
+                    setTimeout(() => {
+                        showToast("Mente limpa! Novas bolhas geradas para continuar relaxando.");
+                        initBubbles();
+                    }, 800);
+                }
+            }, 200);
+        }
+
+        // Efeito visual de brilhos/partículas
+        function createSparkles(x, y) {
+            const colors = ['#a855f7', '#34d399', '#fb923c', '#38bdf8'];
+            for (let i = 0; i < 8; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                
+                const size = Math.random() * 8 + 4;
+                sparkle.style.width = `${size}px`;
+                sparkle.style.height = `${size}px`;
+                sparkle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                const offsetX = (Math.random() - 0.5) * 60;
+                const offsetY = (Math.random() - 0.5) * 60;
+                
+                sparkle.style.left = `${x + offsetX}px`;
+                sparkle.style.top = `${y + offsetY}px`;
+
+                document.body.appendChild(sparkle);
+
+                setTimeout(() => sparkle.remove(), 1200);
+            }
+        }
+
+        /* ==========================================
+           7. JARDIM DA GRATIDÃO (PLANTAS)
+           ========================================== */
+        const plantIcons = [
+            'fa-seedling', 'fa-flower-tulip', 'fa-leaf', 'fa-tree', 'fa-clover'
+        ];
+        const plantColors = [
+            'text-emerald-500 bg-emerald-100 dark:bg-emerald-950/60',
+            'text-teal-500 bg-teal-100 dark:bg-teal-950/60',
+            'text-rose-400 bg-rose-100 dark:bg-rose-950/60',
+            'text-amber-500 bg-amber-100 dark:bg-amber-950/60'
+        ];
+
+        let gardenItems = [
+            { text: "Pela brisa fresca da manhã", icon: "fa-seedling", colorClass: "text-emerald-500 bg-emerald-100 dark:bg-emerald-950/60" },
+            { text: "Um café quentinho", icon: "fa-leaf", colorClass: "text-amber-500 bg-amber-100 dark:bg-amber-950/60" }
+        ];
+
+        function renderGarden() {
+            const gardenPlot = document.getElementById('gardenPlot');
+            gardenPlot.innerHTML = '';
+
+            gardenItems.forEach((item, index) => {
+                const plantCard = document.createElement('div');
+                plantCard.className = `p-4 rounded-2xl flex flex-col items-center text-center shadow-sm border border-white/50 dark:border-slate-700/50 transition-all hover:scale-105 duration-300 ${item.colorClass}`;
+                
+                plantCard.innerHTML = `
+                    <div class="text-2xl mb-2">
+                        <i class="fa-solid ${item.icon}"></i>
+                    </div>
+                    <p class="text-xs font-medium leading-tight text-slate-700 dark:text-slate-200">
+                        "${item.text}"
+                    </p>
+                `;
+
+                gardenPlot.appendChild(plantCard);
+            });
+        }
+
+        function plantSeed() {
+            const input = document.getElementById('gratitudeInput');
+            const text = input.value.trim();
+
+            if (text) {
+                const randomIcon = plantIcons[Math.floor(Math.random() * plantIcons.length)];
+                const randomColor = plantColors[Math.floor(Math.random() * plantColors.length)];
+
+                gardenItems.unshift({
+                    text: text,
+                    icon: randomIcon,
+                    colorClass: randomColor
+                });
+
+                renderGarden();
+                input.value = '';
+                showToast("Sua semente de gratidão foi plantada! 🌿");
+                playGentleTone(523.25, 'sine', 0.4);
+            }
+        }
+
+        /* ==========================================
+           8. INICIALIZAÇÃO
+           ========================================== */
+        window.onload = function() {
+            renderGarden();
+            initBubbles();
+        };
+    </script>
+</body>
+</html>
+```
